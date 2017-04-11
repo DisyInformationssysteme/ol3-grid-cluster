@@ -27,7 +27,8 @@ ol.source.GridCluster = function (options) {
    * @type {number}
    * @private
    */
-  this.sideWidth_ = options.sideWidth !== undefined ? options.sideWidth : 1000;
+  this.sideWidth_ = options.sideWidth;
+  ol.asserts.assert(this.sideWidth_ > 0, 29); // `sideWidth` must be greater than `0`
 
   /**
    * Minimal grid side width in px, default is 30px.
@@ -79,6 +80,19 @@ ol.source.GridCluster.prototype.clearCache = function () {
 ol.source.GridCluster.prototype.setCoordinates = function (coordinates) {
   this.coordinates_ = coordinates;
   this.refresh_();
+};
+
+/**
+ * Returns a single feature for a coordinate from a single feature cache if it already exists or creates it.
+ * @param coordinate - object with id, x and y properties. x and y represents the coordinates of the center point of a cell.
+ * @returns {ol.Feature}
+ */
+ol.source.GridCluster.prototype.getSingleFeatureForCoordinate = function(coordinate) {
+  if (this.singleFeatureCache.has(coordinate.id)) {
+    return this.singleFeatureCache.get(coordinate.id);
+  }
+  var corner = this.calculateCornerPoint_(coordinate, this.sideWidth_);
+  return this.createClusterFeature_(corner.x, corner.y, this.sideWidth_, [coordinate])
 };
 
 /**
@@ -146,24 +160,23 @@ ol.source.GridCluster.prototype.cluster_ = function () {
       continue;
     }
 
-    var cornerX = Math.floor((coordinate.x - this.cornerCoordinate_[0]) / this.currentSideWidth_) * this.currentSideWidth_;
-    var cornerY = Math.floor((coordinate.y - this.cornerCoordinate_[1]) / this.currentSideWidth_) * this.currentSideWidth_;
+    var cornerPoint = this.calculateCornerPoint_(coordinate, this.currentSideWidth_);
 
-    if (!clusteredFeatureMap.has(cornerX)) {
-      clusteredFeatureMap.set(cornerX, new Map());
+    if (!clusteredFeatureMap.has(cornerPoint.x)) {
+      clusteredFeatureMap.set(cornerPoint.x, new Map());
     }
 
-    if (!clusteredFeatureMap.get(cornerX).has(cornerY)) {
-      clusteredFeatureMap.get(cornerX).set(cornerY, []);
+    if (!clusteredFeatureMap.get(cornerPoint.x).has(cornerPoint.y)) {
+      clusteredFeatureMap.get(cornerPoint.x).set(cornerPoint.y, []);
     }
 
-    clusteredFeatureMap.get(cornerX).get(cornerY).push(coordinate);
+    clusteredFeatureMap.get(cornerPoint.x).get(cornerPoint.y).push(coordinate);
   }
 
   var gridCluster = this;
   clusteredFeatureMap.forEach(function (clusteredFeatureMapY, cornerX) {
     clusteredFeatureMapY.forEach(function (features, cornerY) {
-      gridCluster.features_.push(gridCluster.createClusterFeature_(cornerX, cornerY, features));
+      gridCluster.features_.push(gridCluster.createClusterFeature_(cornerX, cornerY, gridCluster.currentSideWidth_, features));
     })
   });
 };
@@ -172,12 +185,13 @@ ol.source.GridCluster.prototype.cluster_ = function () {
  * Creates a cluster feature with a list of actual coordinate features
  * @param cornerX
  * @param cornerY
+ * @param clusterFeatureSideWidth
  * @param {Array.<ol.Feature>} features Features
  * @return {ol.Feature} The cluster feature.
  * @private
  */
-ol.source.GridCluster.prototype.createClusterFeature_ = function (cornerX, cornerY, features) {
-  var scaleFactor = this.currentSideWidth_ / this.sideWidth_;
+ol.source.GridCluster.prototype.createClusterFeature_ = function (cornerX, cornerY, clusterFeatureSideWidth, features) {
+  var scaleFactor = clusterFeatureSideWidth / this.sideWidth_;
   var maxFeatureCount = Math.pow(scaleFactor, 2);
   var fill = features.length / maxFeatureCount;
   var isSingleFeature = maxFeatureCount === 1;
@@ -189,9 +203,9 @@ ol.source.GridCluster.prototype.createClusterFeature_ = function (cornerX, corne
 
   var polygonPoints = [
     [cornerX, cornerY],
-    [cornerX, cornerY + this.currentSideWidth_],
-    [cornerX + this.currentSideWidth_, cornerY + this.currentSideWidth_],
-    [cornerX + this.currentSideWidth_, cornerY],
+    [cornerX, cornerY + clusterFeatureSideWidth],
+    [cornerX + clusterFeatureSideWidth, cornerY + clusterFeatureSideWidth],
+    [cornerX + clusterFeatureSideWidth, cornerY],
     [cornerX, cornerY]
   ];
 
@@ -206,6 +220,20 @@ ol.source.GridCluster.prototype.createClusterFeature_ = function (cornerX, corne
   }
 
   return clusterFeature;
+};
+
+/**
+ * Calculates the coordinates of the corner point of a cluster grid cell for a coordinate with a given side width
+ * @param coordinate
+ * @param sideWidth
+ * @returns {{x: number, y: number}}
+ * @private
+ */
+ol.source.GridCluster.prototype.calculateCornerPoint_ = function(coordinate, sideWidth) {
+  return {
+    x: Math.floor((coordinate.x - this.cornerCoordinate_[0]) / sideWidth) * sideWidth,
+    y: Math.floor((coordinate.y - this.cornerCoordinate_[1]) / sideWidth) * sideWidth
+  };
 };
 
 /**
