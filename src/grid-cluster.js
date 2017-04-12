@@ -47,6 +47,7 @@ ol.source.GridCluster = function (options) {
   /**
    * Source features (coordinates) loading function. Use it to dynamically load features only in the current map extent.
    * @type {function}
+   * @private
    */
   this.loader_ = options.loader !== undefined ? options.loader : undefined;
 
