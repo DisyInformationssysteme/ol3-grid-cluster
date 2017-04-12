@@ -259,14 +259,3 @@ ol.source.GridCluster.prototype.setupChangeEvents_ = function (featureKey, featu
     ol.source.Vector.setupChangeEvents_.call(this, featureKey, feature);
   }
 };
-
-
-// TODO_NOW (solovjova) 07.04.17: overwrite getFeatureById ?
-// TODO_NOW (solovjova) 07.04.17: don't forget to commit changes in github
-// /**
-//  * @inheritDoc
-//  */
-// ol.source.GridCluster.prototype.getFeatureById = function(id) {
-//   var feature = this.idIndex_[id.toString()];
-//   return feature !== undefined ? feature : null;
-// };
