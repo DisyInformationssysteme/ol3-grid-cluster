@@ -29,7 +29,7 @@ ol.interaction.SelectGridCluster = function (options) {
 
   var originalFilter = options.filter || ol.functions.TRUE;
   options.filter = function (feature, layer) {
-    if (!feature.get("selectable")) {
+    if (layer.getSource() instanceof ol.source.GridCluster && !feature.get("selectable")) {
       this.zoomToCluster(feature, layer);
       return false;
     }
