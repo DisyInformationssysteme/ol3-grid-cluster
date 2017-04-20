@@ -95,9 +95,6 @@ ol.interaction.SelectGridCluster.prototype.zoomAndPanTo_ = function (targetLocat
   var view = this.map_.getView();
   view.animate({
     center: targetLocation,
-    duration: this.animationDuration_
-  });
-  view.animate({
     zoom: targetZoom,
     duration: this.animationDuration_
   });

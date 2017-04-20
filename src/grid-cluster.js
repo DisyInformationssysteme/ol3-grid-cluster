@@ -93,7 +93,7 @@ ol.source.GridCluster.prototype.getSingleFeatureForCoordinate = function(coordin
     return this.singleFeatureCache.get(coordinate.id);
   }
   var corner = this.calculateCornerPoint_(coordinate, this.sideWidth_);
-  return this.createClusterFeature_(corner.x, corner.y, this.sideWidth_, [coordinate])
+  return this.createClusterFeature_(corner.x, corner.y, this.sideWidth_, [coordinate]);
 };
 
 /**
