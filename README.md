@@ -14,4 +14,4 @@ Depending on zoom level clusters basic grid cells in bigger grid cells.
 * Opera 25
 * Safari 7.1
 
-You can also use a [polyfill](https://github.com/eriwen/smap.js) to support older browsers.
+You can also use a [polyfill](https://github.com/eriwen/es6-map-shim) to support older browsers.
