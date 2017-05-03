@@ -73,6 +73,7 @@
       var gridClusterSelect = new ol.interaction.SelectGridCluster({
         hitTolerance: 0,
         toggleCondition: ol.events.condition.always,
+        condition: ol.events.condition.click,
         layers: [gridClusterLayer],
         style: new ol.style.Style({
           fill: new ol.style.Fill({color: "#555"}),
