@@ -61,36 +61,31 @@ ol.source.GridCluster = function (options) {
   this.SimpleHashMap_ = window.Map || function () {
       var _map = Object.create(null);
 
-      return Object.create(Object.prototype, {
-        has: {
-          value: function (key) {
-            return !!_map[key];
-          }
+      return {
+
+        has: function (key) {
+          return (key in _map);
         },
-        get: {
-          value: function (key) {
-            return _map[key];
-          }
+
+        get: function (key) {
+          return _map[key];
         },
-        set: {
-          value: function (key, value) {
-            _map[key] = value;
-          }
+
+        set: function (key, value) {
+          _map[key] = value;
         },
-        clear: {
-          value: function () {
-            _map = Object.create(null);
-          }
+
+        clear: function () {
+          _map = Object.create(null);
         },
-        forEach: {
-          value: function (callbackFn) {
-            var keys = Object.keys(_map);
-            for (var i = 0; i < keys.length; i++) {
-              callbackFn.apply(this, [_map[keys[i]], keys[i], this]);
-            }
+
+        forEach: function (callbackFn) {
+          var keys = Object.keys(_map);
+          for (var i = 0; i < keys.length; i++) {
+            callbackFn.call(undefined, _map[keys[i]], keys[i], this);
           }
         }
-      });
+      };
     };
 
   this.extent_ = ol.extent.createEmpty();
@@ -186,7 +181,6 @@ ol.source.GridCluster.prototype.bufferExtent_ = function (extent, factor) {
  * @private
  */
 ol.source.GridCluster.prototype.cluster_ = function () {
-  console.time('cluster');
   this.features_.length = 0;
   var clusteredFeatureMap = new this.SimpleHashMap_();
 
@@ -216,7 +210,6 @@ ol.source.GridCluster.prototype.cluster_ = function () {
       gridCluster.features_.push(gridCluster.createClusterFeature_(parseInt(cornerX), parseInt(cornerY), gridCluster.currentSideWidth_, features));
     })
   });
-  console.timeEnd('cluster');
 };
 
 /**
