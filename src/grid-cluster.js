@@ -58,11 +58,46 @@ ol.source.GridCluster = function (options) {
    */
   this.ignoreFeatureChanges_ = options.ignoreFeatureChanges !== undefined ? options.ignoreFeatureChanges : false;
 
+  this.SimpleHashMap_ = window.Map || function () {
+      var _map = Object.create(null);
+
+      return Object.create(Object.prototype, {
+        has: {
+          value: function (key) {
+            return !!_map[key];
+          }
+        },
+        get: {
+          value: function (key) {
+            return _map[key];
+          }
+        },
+        set: {
+          value: function (key, value) {
+            _map[key] = value;
+          }
+        },
+        clear: {
+          value: function () {
+            _map = Object.create(null);
+          }
+        },
+        forEach: {
+          value: function (callbackFn) {
+            var keys = Object.keys(_map);
+            for (var i = 0; i < keys.length; i++) {
+              callbackFn.apply(this, [_map[keys[i]], keys[i], this]);
+            }
+          }
+        }
+      });
+    };
+
   this.extent_ = ol.extent.createEmpty();
   this.loadedExtent_ = ol.extent.createEmpty();
   this.coordinates_ = [];
   this.features_ = [];
-  this.singleFeatureCache = new Map();
+  this.singleFeatureCache = new this.SimpleHashMap_();
 
 };
 ol.inherits(ol.source.GridCluster, ol.source.Vector);
@@ -151,8 +186,9 @@ ol.source.GridCluster.prototype.bufferExtent_ = function (extent, factor) {
  * @private
  */
 ol.source.GridCluster.prototype.cluster_ = function () {
+  console.time('cluster');
   this.features_.length = 0;
-  var clusteredFeatureMap = new Map();
+  var clusteredFeatureMap = new this.SimpleHashMap_();
 
   for (var i = 0, ii = this.coordinates_.length; i < ii; i++) {
     var coordinate = this.coordinates_[i];
@@ -164,7 +200,7 @@ ol.source.GridCluster.prototype.cluster_ = function () {
     var cornerPoint = this.calculateCornerPoint_(coordinate, this.currentSideWidth_);
 
     if (!clusteredFeatureMap.has(cornerPoint.x)) {
-      clusteredFeatureMap.set(cornerPoint.x, new Map());
+      clusteredFeatureMap.set(cornerPoint.x, new this.SimpleHashMap_());
     }
 
     if (!clusteredFeatureMap.get(cornerPoint.x).has(cornerPoint.y)) {
@@ -177,9 +213,10 @@ ol.source.GridCluster.prototype.cluster_ = function () {
   var gridCluster = this;
   clusteredFeatureMap.forEach(function (clusteredFeatureMapY, cornerX) {
     clusteredFeatureMapY.forEach(function (features, cornerY) {
-      gridCluster.features_.push(gridCluster.createClusterFeature_(cornerX, cornerY, gridCluster.currentSideWidth_, features));
+      gridCluster.features_.push(gridCluster.createClusterFeature_(parseInt(cornerX), parseInt(cornerY), gridCluster.currentSideWidth_, features));
     })
   });
+  console.timeEnd('cluster');
 };
 
 /**
